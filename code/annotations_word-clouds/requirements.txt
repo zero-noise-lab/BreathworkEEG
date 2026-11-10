@@ -1,0 +1,21 @@
+# annotation_word-clouds runtime dependencies.
+
+
+# Core data stack
+numpy>=1.26
+pandas>=2.2
+
+# NLP
+nltk>=3.9              # tokenisation, stopwords, lemmatiser, POS tagger
+
+
+# Visualisation (used in transcribe_utils + notebooks)
+matplotlib>=3.8
+seaborn>=0.13
+wordcloud>=1.9.3
+pillow>=10.0
+
+# Analysis notebooks
+scikit-learn>=1.4
+jupyter>=1.0
+ipykernel>=6.29
