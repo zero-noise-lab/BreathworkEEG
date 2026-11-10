@@ -1,0 +1,102 @@
+
+README -- frequency analysis functions (helpers/)
+
+Per-subject analysis
+- run_freq_analysis_mean.m
+  Per-subject FOOOF-based frequency analysis. For each condition, splits
+  the PSD into periodic/aperiodic/total components, computes AUC per
+  band + broadband, and the aperiodic exponent/offset. Saves one R
+  struct per subject.
+- fun_epoch_reject.m
+  Drops bad epochs before spectral analysis (dependency of
+  run_freq_analysis_mean).
+- get_aux_freq.m
+  Pulls in AUX-derived frequency info per subject (dependency of
+  run_freq_analysis_mean).
+
+Cluster-based stats (channel topographies)
+- fun_plot_topos_T_stats.m
+  Paired cluster-based permutation T-test (each condition vs baseline),
+  one topography per comparison, FDR-corrected across comparisons.
+  Returns report_txt plus Cohen's d effect sizes (max/mean within each
+  significant cluster) and cluster p-values, each as a struct.
+- fun_plot_topos_iv_regression.m
+  Within-subject cluster-based regression of a topo measure against a
+  continuous IV (e.g. ASC rating). One topography (the regression
+  T-map). Returns report_txt plus a within-subject correlation (r) as
+  effect size, and cluster p-values.
+- fun_plot_topos_iv_regression_bands.m
+  Same regression as above, run separately per frequency band, plotted
+  together with a shared color scale and FDR correction across bands.
+
+Modulation index (MI) plots
+- plot_MI_single.m
+  Plots one measure's modulation index vs baseline across conditions,
+  with significance testing per condition.
+- plot_MI_comparison.m
+  Same idea but overlays periodic/aperiodic/total MI on one plot per
+  band, plus a direct periodic-vs-aperiodic comparison. Returns
+  report_txt plus the per-measure and direct-comparison stats as
+  structs.
+
+-----------------------------------------
+
+README -- main frequency results script
+
+Loads the per-subject R structs saved by run_freq_analysis_mean.m, builds
+grand-average matrices, and produces the Figure 2 panels plus supporting
+stats text files. Run top to bottom, section by section (each %% block
+is independent once the load/merge section has run).
+
+- Setup & load
+  Loads FieldTrip, the canonical 63-channel layout (reset_elec_63.mat),
+  and all *_freq.mat files into one R struct array. Assigns each subject
+  a PID number and selects the breathwork (BW) sessions (PMR line is
+  there too, commented out).
+
+- Analysis scope
+  Defines the 5 rated conditions (baseline + R1-R4), the 5 frequency
+  bands (delta-gamma), and the condition/band color maps used
+  throughout.
+
+- ASC ratings
+  Builds start/end/mean/z-scored ASC ratings per subject*condition, the
+  within- and between-condition deltas, and tertile/low-high ASC
+  categories (pooled cutpoints).
+
+- QC
+  Mean FOOOF r2 and epoch counts across all 7 recorded conditions, plus
+  a repeated-measures ANOVA checking for a condition effect on epoch
+  count.
+
+- Build topo + grand-average matrices
+  Per-channel, per-subject, per-condition matrices for broadband
+  total/periodic/aperiodic AUC, exponent, offset, and the same AUC
+  measures split by band.
+
+- R2 dependency
+  Correlates each power measure (total/periodic/aperiodic) against FOOOF
+  fit quality (r2), per band, to check the measures aren't just tracking
+  fit quality.
+
+- PSD panel
+  Raw PSD, fitted aperiodic line, and residual (oscillatory) power,
+  averaged across subjects, one line per condition, shared y-axis across
+  the first two panels.
+
+- Modulation index plots
+  Exponent MI (plot_MI_single), periodic/aperiodic/total MI overlaid for
+  broadband and per-band (plot_MI_comparison). Each saves an .svg figure
+  and a _stats.txt via report_txt.
+
+- Cluster topographies (vs baseline)
+  Paired cluster-based T-tests (fun_plot_topos_T_stats) for broadband
+  total/periodic/aperiodic, exponent, and each measure split by band.
+  Each saves a topoT_*.svg figure and a clusterstats_*.txt.
+
+- ASC topo relationships (currently "not used")
+  Within-subject cluster regression of exponent (single topo,
+  fun_plot_topos_iv_regression) and total/aperiodic/periodic power
+  (per-band, fun_plot_topos_iv_regression_bands) against the ASC rating.
+  Each saves a regression_*.svg figure and a regression_*.txt.
+

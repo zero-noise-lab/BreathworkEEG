@@ -1,0 +1,56 @@
+Preprocessing pipeline
+MATLAB (FieldTrip/EEGLAB) preprocessing pipeline for the breathwork/PMR EEG study
+
+PP_01_1_RESAMPLE_500hz_FT.m
+- loads the raw 2500 Hz .vhdr recordings
+- downsamples to 500 Hz 
+- rescales event-marker timing to match
+- finds the passive (~4 min) and active (~13 min) trial windows from the recording's trigger sequence. 
+- Saves one FieldTrip struct per subject with trl_pass/trl_act attached.
+
+PP_01_2_AUX_CLN_FT_GUI.m 
+- loads the downsampled AUX channels (ECG, ECG2, RESP), 
+- filters ECG, and runs a short interactive QC pass per channel via ft_databrowser (flip polarity if inverted, mark/NaN noisy segments). 
+- Merges raw + filtered ECG and RESP into one AUX struct and saves it.
+
+PP_01_3_AUX_PROCESS_fun.m 
+- takes one subject's AUX file at a time (meant to be run per-subject, e.g. as a SLURM array job). 
+- Loads the AUX-cleaned struct, 
+- detects ECG R-peaks per channel, flags bad beat-to-beat (RR) intervals, 
+- derives a respiration-amplitude channel from the ECG peak envelope (EDR), 
+- and optionally merges in BBSIG-derived cleaned ECG/R-peaks if that derivative exists for the subject (NaN-filled channels otherwise, with a console note). 
+- Saves the fully processed AUX struct.
+
+PP_02_PREP4ICA_EL.m 
+- converts the downsampled FieldTrip struct to EEGLAB format,
+- drops the non-EEG (AUX) channels, applies the standard-1020 channel lookup, 
+- band-pass filters (1-45 Hz), cuts to the session window with padding, 
+- interactively confirms/removes bad channels before ICA. 
+- Saves an outlier-channel diagnostic plot plus the bad-channel-removed .set file.
+
+PP_03_RUNICA_EL_fun.m 
+- loads the ICA-prepped .set, removes line noise, and runs ICA (extended infomax). 
+- Saves the dataset with ICA weights attached.
+
+PP_04_1_ICLABEL_TYPING_fun.m 
+- step 1 of 2 for cleaning. 
+- Runs ICLabel plus custom component typing (brain/eye/cardiac/muscle/ ambiguous)
+- combining ICLabel's output with blink-locked and R-peak-locked morphology checks against the AUX channels. 
+- Saves the typing to disk for review/manual override before cleaning.
+
+PP_04_2_WICA_fun.m 
+- step 2 of 2. 
+- Loads the typing saved by step 6 (including any manual overrides), 
+- applies typed wICA cleaning: eye/cardiac/muscle components deleted, brain components left untouched, anything ambiguous wavelet-denoised (SWT, db4)
+- saves the cleaned EEG.
+
+PP_05_FIN_CLEAN_fun.m 
+- cuts the cleaned EEG into the labeled passive trials (EO_pre, EC_pre, R1-R3, EC_post, EO_post), 
+- flags and interpolates bad channels per trial (ft_channelrepair), 
+- re-references to the average, and reindexes channels back to the canonical reset_elec_63.mat order (FieldTrip's channel-repair step otherwise silently reorders channels). 
+- Saves the cleaned data plus a diagnostics file.
+
+PP_06_MERGE_PASS_fun.m 
+- merges the step-8 output with its AUX data, survey responses, and (optionally) SMT data into one struct per session, matched by session date. 
+
+reset_elec_63.mat holds the canonical 63-channel electrode layout and neighbour structure (elec_63, neighbours_63) used throughout steps 4-8.
