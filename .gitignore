@@ -1,2 +1,10 @@
 
 .DS_Store
+
+# Python environments and generated caches
+__pycache__/
+*.py[cod]
+.venv/
+
+# Explicit local outputs; bundled NPZ/MAT example inputs remain trackable.
+/outputs/

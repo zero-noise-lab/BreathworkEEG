@@ -1,0 +1,7 @@
+# Python 3.13; no study-specific data loaders or toolboxes.
+numpy==2.4.2
+scipy==1.17.0
+mne==1.11.0
+mne-connectivity==0.8.1
+joblib==1.5.3
+matplotlib==3.10.8
